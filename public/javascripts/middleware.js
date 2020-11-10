@@ -1,5 +1,6 @@
 let jwt = require("jsonwebtoken");
 const config = require("./config.js");
+const conn = require("../../lib/MongoUtils");
 
 // Función encargada de realizar la validación del token y que es directamente consumida por server.js
 let checkToken = (req, res, next) => {
@@ -24,7 +25,38 @@ let checkToken = (req, res, next) => {
           });
         } else {
           req.decoded = decoded;
-          next();
+
+          // Consultar a la db con el token generado
+          // verificar roles del usuario
+          // poner condicionales
+
+          conn
+            .then((client) => {
+              client
+                .db("messages")
+                .collection("users")
+                .find({ token })
+                .toArray((err, data) => {
+                  console.log(data);
+                  let user = data.user;
+
+                  if (req.type === "GET") {
+                    if (user.role === "admin" || user.role === "viewer") {
+                      next();
+                    }
+                  } else if (req.type === "POST") {
+                    if (user.role === "admin" || user.role === "publisher") {
+                      next();
+                    }
+                  }
+
+                  res.status(200).send(data);
+                  console.log(data);
+                });
+            })
+            .catch((err) => {
+              res.status(400).send(err);
+            });
         }
       });
     }
