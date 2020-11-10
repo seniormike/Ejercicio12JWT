@@ -10,6 +10,7 @@ let checkToken = (req, res, next) => {
 
   // Si existe algún valor para el token, se analiza
   // de lo contrario, un mensaje de error es retornado
+
   if (token) {
     // Si el token incluye el prefijo 'Bearer ', este debe ser removido
     if (token.startsWith("Bearer ")) {
@@ -38,20 +39,24 @@ let checkToken = (req, res, next) => {
                 .find({ token })
                 .toArray((err, data) => {
                   console.log(data);
-                  let user = data.user;
+                  let user = data[0];
 
-                  if (req.type === "GET") {
+                  if (req.method === "GET") {
                     if (user.role === "admin" || user.role === "viewer") {
+                      console.log("<entra-admin>");
                       next();
+                    } else {
+                      res.status(403).send("Unauthorized");
                     }
-                  } else if (req.type === "POST") {
+                  } else if (req.method === "POST") {
                     if (user.role === "admin" || user.role === "publisher") {
                       next();
+                    } else {
+                      res.status(403).send("Unauthorized");
                     }
+                  } else {
+                    res.status(403).send("Unauthorized");
                   }
-
-                  res.status(200).send(data);
-                  console.log(data);
                 });
             })
             .catch((err) => {

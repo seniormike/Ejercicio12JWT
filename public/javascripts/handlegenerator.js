@@ -39,6 +39,22 @@ class HandlerGenerator {
                 });
 
                 // Retorna el token el cuál debe ser usado durante las siguientes solicitudes
+                conn.then((client) => {
+                  client
+                    .db("messages")
+                    .collection("users")
+                    .updateOne(
+                      { username: username }, // Filter
+                      { $set: { token: token } } // Update
+                    )
+                    .then((obj) => {
+                      console.log("Updated - " + obj);
+                    })
+                    .catch((err) => {
+                      console.log("Error: " + err);
+                    });
+                });
+
                 res.json({
                   success: true,
                   message: "Authentication successful!",
